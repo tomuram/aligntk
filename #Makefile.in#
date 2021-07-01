@@ -1,0 +1,182 @@
+# the configure script will fill in these values
+CC	= @CC@
+CFLAGS	= @CFLAGS@
+CXX	= @CXX@
+CXXFLAGS= @CXXFLAGS@
+MPICC   = @MPICC@
+MKDIR   = @MKDIR@
+INSTALL	= @INSTALL@
+prefix	= @prefix@
+exec_prefix = @exec_prefix@
+bindir	= @bindir@
+datarootdir = @datarootdir@
+datadir = @datadir@
+TARGETS = @TARGETS@
+INSTALL_TARGETS = @INSTALL_TARGETS@
+
+NOX_EXECUTABLES = align apply_map best_affine best_rigid combine_masks compare_images compare_maps compose_maps extrapolate_map find_rst gen_imaps gen_mask gen_pyramid merge_images ortho prun reduce reduce_mask register transform
+X_EXECUTABLES = clean_maps inspector
+FLTK_LIBS=-lfltk -lfltk_gl -lGL -lGLU
+
+all: $(TARGETS)
+
+nox_executables: $(NOX_EXECUTABLES)
+
+x_executables: $(X_EXECUTABLES)
+
+align.o: align.c dt.h imio.h
+	$(MPICC) $(CFLAGS) -c -DFONT_FILE="$(datadir)/aligntk/font.pgm" align.c
+
+align: align.o compute_mapping.o dt.o imio2.o
+	$(MPICC) $(CFLAGS) -o align align.o compute_mapping.o dt.o imio.o -ltiff -ljpeg -lm -lz
+
+apply_map.o: apply_map.c dt.h imio.h invert.h
+	$(CC) $(CFLAGS) -c -DFONT_FILE="$(datadir)/aligntk/font.pgm" apply_map.c
+
+apply_map: apply_map.o dt.o imio.o invert.o
+	$(CC) $(CFLAGS) -o apply_map apply_map.o dt.o imio.o invert.o -ltiff -ljpeg -lm -lz
+
+best_affine.o: best_affine.c imio.h
+	$(CC) $(CFLAGS) -c best_affine.c
+
+best_affine: best_affine.o imio.o
+	$(CC) $(CFLAGS) -o best_affine best_affine.o imio.o -ltiff -ljpeg -lm -lz
+
+best_rigid.o: best_rigid.c imio.h
+	$(CC) $(CFLAGS) -c best_rigid.c
+
+best_rigid: best_rigid.o imio.o
+	$(CC) $(CFLAGS) -o best_rigid best_rigid.o imio.o -ltiff -ljpeg -lm -lz
+
+clean_maps.o: clean_maps.cc imio.h invert.h
+	$(CXX) $(CFLAGS) -c clean_maps.cc
+
+clean_maps: clean_maps.o imio.o invert.o
+	$(CXX) $(CFLAGS) -o clean_maps clean_maps.o imio.o invert.o $(FLTK_LIBS) -ltiff -ljpeg -lm -lz
+
+combine_masks.o: combine_masks.c imio.h
+	$(CC) $(CFLAGS) -c combine_masks.c
+
+combine_masks: combine_masks.o imio.o
+	$(CC) $(CFLAGS) -o combine_masks combine_masks.o imio.o -ltiff -ljpeg -lm -lz
+
+compare_images.o: compare_images.c imio.h
+	$(CC) $(CFLAGS) -c compare_images.c
+
+compare_images: compare_images.o imio.o
+	$(CC) $(CFLAGS) -o compare_images compare_images.o imio.o -ltiff -ljpeg -lm -lz
+
+compare_maps.o: compare_maps.c imio.h
+	$(CC) $(CFLAGS) -c compare_maps.c
+
+compare_maps: compare_maps.o imio.o
+	$(CC) $(CFLAGS) -o compare_maps compare_maps.o imio.o -ltiff -ljpeg -lm -lz
+
+compose_maps.o: compose_maps.c imio.h invert.h
+	$(CC) $(CFLAGS) -c compose_maps.c
+
+compose_maps: compose_maps.o imio.o invert.o
+	$(CC) $(CFLAGS) -o compose_maps compose_maps.o imio.o invert.o -ltiff -ljpeg -lm -lz
+
+extrapolate_map.o: extrapolate_map.c imio.h
+	$(CC) $(CFLAGS) -c extrapolate_map.c
+
+extrapolate_map: extrapolate_map.o imio.o
+	$(CC) $(CFLAGS) -o extrapolate_map extrapolate_map.o imio.o -ltiff -ljpeg -lm -lz
+
+find_rst.o: find_rst.c dt.h imio.h par.h
+	$(MPICC) $(CFLAGS) -c find_rst.c
+
+find_rst: find_rst.o dt.o imio.o libpar.o
+	$(MPICC) $(CFLAGS) -o find_rst find_rst.o dt.o imio.o libpar.o -lfftw3f -ltiff -ljpeg -lm -lz
+
+gen_imaps.o: gen_imaps.c imio.h invert.h
+	$(MPICC) $(CFLAGS) -c gen_imaps.c
+
+gen_imaps: gen_imaps.o imio.o invert.o
+	$(MPICC) $(CFLAGS) -o gen_imaps gen_imaps.o imio.o invert.o -ltiff -ljpeg -lm -lz
+
+gen_mask.o: gen_mask.c imio.h
+	$(CC) $(CFLAGS) -c gen_mask.c
+
+gen_mask: gen_mask.o imio.o
+	$(CC) $(CFLAGS) -o gen_mask gen_mask.o imio.o -ltiff -ljpeg -lm -lz
+
+gen_pyramid.o: gen_pyramid.c imio.h
+	$(CC) $(CFLAGS) -c gen_pyramid.c
+
+gen_pyramid: gen_pyramid.o imio.o
+	$(CC) $(CFLAGS) -o gen_pyramid gen_pyramid.o imio.o -ltiff -ljpeg -lm -lz
+
+inspector.o: inspector.cc imio.h invert.h
+	$(CXX) $(CFLAGS) -c inspector.cc
+
+inspector: inspector.o imio.o invert.o
+	$(CXX) $(CFLAGS) -o inspector inspector.o imio.o invert.o $(FLTK_LIBS) -ltiff -ljpeg -lm -lz
+
+libpar.o: libpar.c par.h
+	$(MPICC) $(CFLAGS) -c libpar.c
+
+merge_images.o: merge_images.c imio.h
+	$(CC) $(CFLAGS) -c merge_images.c
+
+merge_images: merge_images.o imio.o
+	$(CC) $(CFLAGS) -o merge_images merge_images.o imio.o -ltiff -ljpeg -lm -lz
+
+ortho.o: ortho.c imio.h
+	$(MPICC) $(CFLAGS) -c ortho.c
+
+ortho: ortho.o imio.o
+	$(MPICC) $(CFLAGS) -o ortho ortho.o imio.o -ltiff -ljpeg -lm -lz
+
+prun.o: prun.c par.h
+	$(MPICC) $(CFLAGS) -c prun.c
+
+prun: prun.o libpar.o
+	$(MPICC) $(CFLAGS) -o prun prun.o libpar.o -lm
+
+reduce.o: reduce.c imio.h
+	$(MPICC) $(CFLAGS) -c reduce.c
+
+reduce: reduce.o imio2.o
+	$(MPICC) $(CFLAGS) -o reduce reduce.o imio2.o -ltiff -ljpeg -lm -lz
+
+reduce_mask.o: reduce_mask.c imio.h
+	$(MPICC) $(CFLAGS) -c reduce_mask.c
+
+reduce_mask: reduce_mask.o imio.o
+	$(MPICC) $(CFLAGS) -o reduce_mask reduce_mask.o imio.o -ltiff -ljpeg -lm -lz
+
+register.o: register.c compute_mapping.h imio.h par.h
+	$(MPICC) $(CFLAGS) -c register.c
+
+register: register.o dt.o compute_mapping.o imio.o libpar.o
+	$(MPICC) $(CFLAGS) -o register register.o dt.o compute_mapping.o imio.o libpar.o -ltiff -ljpeg -lm -lz
+
+transform.o: transform.c imio.h
+	$(CC) $(CFLAGS) -c transform.c
+
+transform: transform.o imio.o
+	$(CC) $(CFLAGS) -o transform transform.o imio.o -ltiff -ljpeg -lm -lz
+
+check:
+	cd checkdir; ./check.sh
+
+install: $(INSTALL_TARGETS)
+
+nox_install: $(NOX_EXECUTABLES) font.pgm
+	$(INSTALL) $(NOX_EXECUTABLES) $(bindir)
+	$(MKDIR) -p $(datadir)/aligntk/
+	$(INSTALL) font.pgm $(datadir)/aligntk/
+
+x_install: $(X_EXECUTABLES)
+	$(INSTALL) $(X_EXECUTABLES) $(bindir)
+
+clean:
+	rm -f *~
+	rm -f *.o $(NOX_EXECUTABLES) $(X_EXECUTABLES)
+
+distclean: clean
+	rm -f Makefile config.h config.status config.cache config.log
+	rm -rf autom4te.cache
+	rm -rf checkdir/cmaps checkdir/maps checkdir/amaps checkdir/grids checkdir/aligned checkdir/aligned_yz checkdir/compare.out

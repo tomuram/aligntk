@@ -1,0 +1,665 @@
+1,32d0
+< /*
+<  * imio.c  - image and map I/O routines
+<  *
+<  *  Copyright (c) 2006-2013 National Resource for Biomedical
+<  *                          Supercomputing,
+<  *                          Pittsburgh Supercomputing Center,
+<  *                          Carnegie Mellon University
+<  *
+<  *  Distribution of this code is prohibited without the prior written
+<  *  consent of the National Resource for Biomedical Supercomputing.
+<  *
+<  *  Acknowledgements:
+<  *     Development of this code was supported in part by
+<  *       NIH NCRR grant 5P41RR006009 and
+<  *       NIH NIGMS grant P41GM103712
+<  *
+<  *  This program is distributed in the hope that it will
+<  *  be useful, but WITHOUT ANY WARRANTY; without even the
+<  *  implied warranty of MERCHANTABILITY or FITNESS FOR A
+<  *  PARTICULAR PURPOSE.  Neither Carnegie Mellon University
+<  *  nor any of the authors assume any liability for
+<  *  damages, incidental or otherwise, caused by the
+<  *  installation or use of this software.
+<  *
+<  *  CLINICAL APPLICATIONS ARE NOT RECOMMENDED, AND THIS
+<  *  SOFTWARE HAS NOT BEEN EVALUATED BY THE UNITED STATES
+<  *  FDA FOR ANY CLINICAL USE.
+<  *
+<  *  HISTORY
+<  *    2006-2013  Written by Greg Hood (ghood@psc.edu)
+<  */
+< 
+45c13
+< #define N_EXTENSIONS	12
+---
+> #define N_EXTENSIONS	10
+47c15
+< 					  ".pgm", ".PGM", ".ppm", ".PPM",
+---
+> 					  ".pgm", ".PGM",
+50a19,22
+> #define N_BITMAP_EXTENSIONS	2
+> static char *bitmapExtensions[N_BITMAP_EXTENSIONS] = { ".pbm", ".pbm.gz" };
+> static int bitmapExtension = 0;
+> 
+55,56d26
+< int ReadPpmImageSize (const char *filename, int *width, int *height,
+< 		      char *error);
+68c38,50
+< int ReadHeader (FILE *f, char *tc, uint32 *w, uint32 *h, int *m);
+---
+> int ReadHeader (FILE *f, char *tc, int *w, int *h, int *m);
+> 
+> 
+> int ReadPbmBitmapSize (const char *filename, int *width, int *height,
+> 		       char *error);
+> int ReadPbmgzBitmapSize (const char *filename, int *width, int *height,
+> 			 char *error);
+> int ReadPbmBitmap (char *filename, unsigned char **buffer,
+> 		   int *width, int *height,
+> 		   char *error);
+> int ReadPbmgzBitmap (char *filename, unsigned char **buffer,
+> 		     int *width, int *height,
+> 		     char *error);
+90c72
+<   else if (len > 4 && strcasecmp(&filename[len-4], ".pgm") == 0)
+---
+>   else if (len > 4 && strcmp(&filename[len-4], ".pgm") == 0)
+92,94c74
+<   else if (len > 4 && strcasecmp(&filename[len-4], ".ppm") == 0)
+<     return(ReadPpmImageSize(filename, width, height, error));
+<   else if (len > 4 && strcasecmp(&filename[len-4], ".jpg") == 0 ||
+---
+>   else if (len > 4 && strcmp(&filename[len-4], ".jpg") == 0 ||
+124,127d103
+< 	      if (!ReadPpmImageSize(fn, width, height, error))
+< 		return(0);
+< 	      break;
+< 
+130,131d105
+< 	    case 10:
+< 	    case 11:
+153c127
+<   uint32 iw, ih;
+---
+>   int iw, ih;
+185c159
+<   uint32 iw, ih;
+---
+>   int iw, ih;
+206,231d179
+< ReadPpmImageSize (const char *filename, int *width, int *height, char *error)
+< {
+<   FILE *f;
+<   char tc;
+<   int m;
+<   uint32 iw, ih;
+< 
+<   f = fopen(filename, "rb");
+<   if (f == NULL)
+<     {
+<       sprintf(error, "Could not open file %s for reading\n",
+< 		  filename);
+<       return(0);
+<     }
+<   if (!ReadHeader(f, &tc, &iw, &ih, &m))
+<     {
+<       sprintf(error, "Image file %s not binary ppm.\n", filename);
+<       return(0);
+<     }
+<   fclose(f);
+<   *width = iw;
+<   *height = ih;
+<   return(1);
+< }
+< 
+< int
+266c214
+<   uint32 xmin, xmax, ymin, ymax;
+---
+>   int xmin, xmax, ymin, ymax;
+321,323d268
+< 	      if (!ReadPpmImage(fn, &buffer, &iw, &ih, error))
+< 		return(0);
+< 	      break;
+326,327d270
+< 	    case 10:
+< 	    case 11:
+407c350
+<   uint32 iw, ih;
+---
+>   int iw, ih;
+429c372
+<   if (TIFFGetField(image, TIFFTAG_SAMPLESPERPIXEL, &spp) == 0 || spp != 1)
+---
+>   if (TIFFGetField(image, TIFFTAG_SAMPLESPERPIXEL, &spp) != 0 && spp != 1)
+431c374
+<       sprintf(error, "Either undefined or unsupported number of samples per pixel (spp = %d) in tiff image %s\n", spp, filename);
+---
+>       sprintf(error, "Unsupported number of samples per pixel (spp = %d) in tiff image %s\n", spp, filename);
+444c387
+<       sprintf(error, "Image %s does not define its height (length)\n",
+---
+>       sprintf(error, "TIFF image %s does not define its height (length)\n",
+509c452
+<   uint32 iw, ih;
+---
+>   int iw, ih;
+544,585d486
+< ReadPpmImage (char *filename, unsigned char **buffer,
+< 	      int *width, int *height,
+< 	      char *error)
+< {
+<   FILE *f;
+<   char tc;
+<   int m;
+<   uint32 iw, ih;
+<   unsigned char *b;
+< 
+<   f = fopen(filename, "rb");
+<   if (f == NULL)
+<     {
+<       sprintf(error, "Could not open file %s for reading\n",
+< 	      filename);
+<       return(0);
+<     }
+<   if (!ReadHeader(f, &tc, &iw, &ih, &m))
+<     {
+<       sprintf(error, "Image file %s not binary ppm.\n", filename);
+<       return(0);
+<     }
+<   if ((b = (unsigned char *) malloc(iw * ih)) == NULL)
+<     {
+<       sprintf(error, "Could not allocate enough memory for image in file %s\n", filename);
+<       return(0);
+<     }
+<   if (fread(b, 1, iw * ih, f) != iw * ih)
+<     {
+<       sprintf(error, "Image file %s apparently truncated.\n",
+< 	      filename);
+<       return(0);
+<     }
+<   fclose(f);
+< 
+<   *buffer = b;
+<   *width = iw;
+<   *height = ih;
+<   return(1);
+< }
+< 
+< int
+593c494
+<   uint32 iw, ih;
+---
+>   int iw, ih;
+595c496
+<   uint32 i;
+---
+>   int i;
+625c526
+<     jpeg_read_scanlines(&cinfo, &b[cinfo.output_scanline * iw],
+---
+>     jpeg_read_scanlines(&cinfo, &b[cinfo.output_scanline],
+645d545
+<   int quality;
+656a557
+>       
+715,744d615
+<   else if (strcmp(&filename[len-4], ".jpg") == 0)
+<     {
+<       switch (compressionMethod)
+< 	{
+< 	case JpegQuality95:
+< 	  quality = 95;
+< 	  break;
+< 	case JpegQuality90:
+< 	  quality = 90;
+< 	  break;
+< 	case JpegQuality85:
+< 	  quality = 85;
+< 	  break;
+< 	case JpegQuality80:
+< 	  quality = 80;
+< 	  break;
+< 	case JpegQuality75:
+< 	  quality = 75;
+< 	  break;
+< 	case JpegQuality70:
+< 	  quality = 70;
+< 	  break;
+< 	default:
+< 	  sprintf(error, "Unsupported compression method for jpg output: %d\n",
+< 		  (int) compressionMethod);
+< 	  return(0);
+< 	}
+<       return(WriteJpgImage(filename, pixels, width, height,
+< 			   quality, error));
+<     }
+754,757c625,627
+< WriteJpgImage (char *filename, unsigned char *buffer,
+< 	       int width, int height,
+< 	       int quality,
+< 	       char *error)
+---
+> ReadBitmapSize (char *filename,
+> 		int *width, int *height,
+> 		char *error)
+759,767c629,635
+<   struct jpeg_compress_struct cinfo;
+<   struct jpeg_error_mgr jerr;
+<   JSAMPROW row_pointer[1];        /* pointer to a single row */
+<   FILE *f;
+<   uint32 iw, ih;
+<   unsigned char **b;
+<   uint32 i;
+<   
+<   if ((f = fopen(filename, "wb")) == NULL)
+---
+>   int len;
+>   char fn[PATH_MAX];
+>   int i, j, k;
+>   struct stat sb;
+> 
+>   len = strlen(filename);
+>   if (len == 0)
+769,770c637
+<       sprintf(error, "Could not open file %s for writing\n",
+< 		  filename);
+---
+>       sprintf(error, "Bitmap filename is empty.\n");
+773,784c640,644
+<   cinfo.err = jpeg_std_error(&jerr);
+<   jpeg_create_compress(&cinfo);
+<   jpeg_stdio_dest(&cinfo, f);
+<   cinfo.image_width = width;
+<   cinfo.image_height = height;
+<   cinfo.input_components = 1;
+<   cinfo.in_color_space = JCS_GRAYSCALE;
+<   jpeg_set_defaults(&cinfo);
+<   jpeg_set_quality(&cinfo, quality, TRUE);
+< 
+<   jpeg_start_compress(&cinfo, TRUE);
+<   while (cinfo.next_scanline < cinfo.image_height)
+---
+>   if (len > 4 && strcasecmp(&filename[len-4], ".pbm") == 0)
+>     return(ReadPbmBitmapSize(filename, width, height, error));
+>   else if (len > 7 && strcasecmp(&filename[len-7], ".pbm.gz") == 0)
+>     return(ReadPbmgzBitmapSize(filename, width, height, error));
+>   else
+786,787c646,673
+<       row_pointer[0] = &buffer[cinfo.next_scanline * width];
+<       (void) jpeg_write_scanlines(&cinfo, row_pointer, 1);
+---
+>       j = bitmapExtension;
+>       for (i = 0; i < N_EXTENSIONS; ++i)
+> 	{
+> 	  k = (j + i) % N_BITMAP_EXTENSIONS;
+> 	  sprintf(fn, "%s%s", filename, bitmapExtensions[k]);
+> 	  if (stat(fn, &sb) != 0)
+> 	    continue;
+> 	  switch (k)
+> 	    {
+> 	    case 0:
+> 	      if (!ReadPbmBitmapSize(fn, width, height, error))
+> 		return(0);
+> 	    case 1:
+> 	      if (!ReadPbmgzBitmapSize(fn, width, height, error))
+> 		return(0);
+> 	      break;
+> 	    default:
+> 	      break;
+> 	    }
+> 	  bitmapExtension = k;
+> 	  break;
+> 	}
+>       if (i >= N_BITMAP_EXTENSIONS)
+> 	{
+> 	  sprintf(error, "Cannot find bitmap file with basename %s\n",
+> 		  filename);
+> 	  return(0);
+> 	}
+789,791d674
+<   jpeg_finish_compress(&cinfo);
+<   fclose(f);
+<   jpeg_destroy_compress(&cinfo);
+794a678
+> 
+796,798c680,682
+< ReadBitmapSize (char *filename,
+< 		int *width, int *height,
+< 		char *error)
+---
+> ReadPbmBitmapSize (const char *filename,
+> 		   int *width, int *height,
+> 		   char *error)
+800,801d683
+<   int len;
+<   gzFile gzf;
+803c685
+<   uint32 iw, ih;
+---
+>   int iw, ih;
+807,808c689,690
+<   len = strlen(filename);
+<   if (len < 5)
+---
+>   f = fopen(filename, "rb");
+>   if (f == NULL)
+810c692,693
+<       sprintf(error, "Image filename is too short: %s\n", filename);
+---
+>       sprintf(error, "Could not open file %s for reading\n",
+> 	      filename);
+813c696
+<   if (strcasecmp(&filename[len-4], ".pbm") == 0)
+---
+>   if (!ReadHeader(f, &tc, &iw, &ih, &m) || tc != '4')
+815,829c698,699
+<       f = fopen(filename, "rb");
+<       if (f == NULL)
+< 	{
+< 	  sprintf(error, "Could not open file %s for reading\n",
+< 		  filename);
+< 	  return(0);
+< 	}
+<       if (!ReadHeader(f, &tc, &iw, &ih, &m) || tc != '4')
+< 	{
+< 	  sprintf(error, "Bitmap file not binary pbm: %s\n", filename);
+< 	  return(0);
+< 	}
+<       fclose(f);
+<       *width = iw;
+<       *height = ih;
+---
+>       sprintf(error, "Bitmap file not binary pbm: %s\n", filename);
+>       return(0);
+831,839c701,705
+<   else if (len > 7 && strcasecmp(&filename[len-7], ".pbm.gz") == 0)
+<     {
+<       gzf = gzopen(filename, "rb");
+<       if (!ReadGZHeader(gzf, &tc, &iw, &ih, &m) || tc != '4')
+< 	{
+< 	  sprintf(error, "Mask file not binary pbm: %s\n", filename);
+< 	  return(0);
+< 	}
+<       gzclose(gzf);
+---
+>   fclose(f);
+>   *width = iw;
+>   *height = ih;
+>   return(1);
+> }
+841,844c707,718
+<       *width = iw;
+<       *height = ih;
+<     }
+<   else
+---
+> int
+> ReadPbmgzBitmapSize (const char *filename,
+> 		     int *width, int *height,
+> 		     char *error)
+> {
+>   gzFile gzf;
+>   int iw, ih;
+>   char tc;
+>   int m;
+>   
+>   gzf = gzopen(filename, "rb");
+>   if (!ReadGZHeader(gzf, &tc, &iw, &ih, &m) || tc != '4')
+846c720
+<       sprintf(error, "Unrecognized file extension for bitmap file %s\n", filename);
+---
+>       sprintf(error, "Mask file not binary pbm: %s\n", filename);
+848a723,726
+>   gzclose(gzf);
+> 
+>   *width = iw;
+>   *height = ih;
+859,862c737
+<   gzFile gzf;
+<   FILE *f;
+<   uint32 iw, ih;
+<   char tc;
+---
+>   int iw, ih;
+870a746,748
+>   int i, j, k;
+>   char fn[PATH_MAX];
+>   struct stat sb;
+873c751
+<   if (len < 5)
+---
+>   if (len == 0)
+875c753
+<       sprintf(error, "Image filename is too short: %s\n", filename);
+---
+>       sprintf(error, "Bitmap filename is empty.\n");
+879c757
+<   if (strcasecmp(&filename[len-4], ".pbm") == 0)
+---
+>   if (len > 4 && strcasecmp(&filename[len-4], ".pbm") == 0)
+881,906c759,760
+<       f = fopen(filename, "rb");
+<       if (f == NULL)
+< 	{
+< 	  sprintf(error, "Could not open file %s for reading\n",
+< 		  filename);
+< 	  return(0);
+< 	}
+<       if (!ReadHeader(f, &tc, &iw, &ih, &m) || tc != '4')
+< 	{
+< 	  sprintf(error, "Mask file not binary pbm: %s\n", filename);
+< 	  return(0);
+< 	}
+< 
+<       ibpl = (iw + 7) >> 3;
+<       if ((buffer = (unsigned char *) malloc(ih * ibpl)) == NULL)
+< 	{
+< 	  sprintf(error, "Could not allocate enough memory for image in file %s\n", filename);
+< 	  return(0);
+< 	}
+<       if (fread(buffer, 1, ih*ibpl, f) != ih * ibpl)
+< 	{
+< 	  fclose(f);
+< 	  sprintf(error, "Image file %s apparently truncated.\n", filename);
+< 	  return(0);
+< 	}
+<       fclose(f);
+---
+>       if (!ReadPbmBitmap(filename, &buffer, &iw, &ih, error))
+> 	return(0);
+910,918c764,770
+<       gzf = gzopen(filename, "rb");
+<       if (!ReadGZHeader(gzf, &tc, &iw, &ih, &m) || tc != '4')
+< 	{
+< 	  sprintf(error, "Mask file not binary pbm: %s\n", filename);
+< 	  return(0);
+< 	}
+< 
+<       ibpl = (iw + 7) >> 3;
+<       if ((buffer = (unsigned char *) malloc(ih * ibpl)) == NULL)
+---
+>       if (!ReadPbmgzBitmap(filename, &buffer, &iw, &ih, error))
+> 	return(0);
+>     }
+>   else
+>     {
+>       j = bitmapExtension;
+>       for (i = 0; i < N_BITMAP_EXTENSIONS; ++i)
+920,921c772,788
+< 	  sprintf(error, "Could not allocate enough memory for image in file %s\n", filename);
+< 	  return(0);
+---
+> 	  k = (j + i) % N_BITMAP_EXTENSIONS;
+> 	  sprintf(fn, "%s%s", filename, bitmapExtensions[k]);
+> 	  if (stat(fn, &sb) != 0)
+> 	    continue;
+> 	  switch (k)
+> 	    {
+> 	    case 0:
+> 	      if (!ReadPbmBitmap(fn, &buffer, &iw, &ih, error))
+> 		return(0);
+> 	      break;
+> 	    case 1:
+> 	      if (!ReadPbmgzBitmap(fn, &buffer, &iw, &ih, error))
+> 		return(0);
+> 	      break;
+> 	    }
+> 	  bitmapExtension = k;
+> 	  break;
+923c790
+<       if (gzread(gzf, buffer, ih*ibpl) != ih * ibpl)
+---
+>       if (i >= N_BITMAP_EXTENSIONS)
+925,926c792,793
+< 	  fclose(f);
+< 	  sprintf(error, "Image file %s apparently truncated.\n", filename);
+---
+> 	  sprintf(error, "Cannot find bitmap file with basename %s\n",
+> 		  filename);
+929,934d795
+<       gzclose(gzf);
+<     }
+<   else
+<     {
+<       sprintf(error, "Unrecognized file extension for bitmap file %s\n", filename);
+<       return(0);
+974a836
+>   ibpl = (iw + 7) >> 3;
+995c857,935
+< ReadHeader (FILE *f, char *tc, uint32 *w, uint32 *h, int *m)
+---
+> ReadPbmBitmap (char *filename, unsigned char **buffer,
+> 	       int *width, int *height,
+> 	       char *error)
+> {
+>   FILE *f;
+>   int iw, ih;
+>   int m;
+>   char tc;
+>   int ibpl;
+> 
+>   f = fopen(filename, "rb");
+>   if (f == NULL)
+>     {
+>       sprintf(error, "Could not open file %s for reading\n",
+> 	      filename);
+>       return(0);
+>     }
+>   if (!ReadHeader(f, &tc, &iw, &ih, &m) || tc != '4')
+>     {
+>       sprintf(error, "Mask file not binary pbm: %s\n", filename);
+>       return(0);
+>     }
+> 
+>   ibpl = (iw + 7) >> 3;
+>   if ((*buffer = (unsigned char *) malloc(ih * ibpl)) == NULL)
+>     {
+>       sprintf(error, "Could not allocate enough memory for image in file %s\n", filename);
+>       return(0);
+>     }
+>   if (fread(*buffer, 1, ih*ibpl, f) != ih * ibpl)
+>     {
+>       fclose(f);
+>       sprintf(error, "Image file %s apparently truncated.\n", filename);
+>       return(0);
+>     }
+>   fclose(f);
+>   *width = iw;
+>   *height = ih;
+>   return(1);
+> }
+> 
+> int
+> ReadPbmgzBitmap (char *filename, unsigned char **buffer,
+> 		 int *width, int *height,
+> 		 char *error)
+> {
+>   gzFile gzf;
+>   int iw, ih;
+>   int m;
+>   char tc;
+>   int ibpl;
+> 
+>   gzf = gzopen(filename, "rb");
+>   if (!ReadGZHeader(gzf, &tc, &iw, &ih, &m) || tc != '4')
+>     {
+>       sprintf(error, "Mask file not binary pbm: %s\n", filename);
+>       return(0);
+>     }
+> 
+>   ibpl = (iw + 7) >> 3;
+>   if ((*buffer = (unsigned char *) malloc(ih * ibpl)) == NULL)
+>     {
+>       sprintf(error, "Could not allocate enough memory for image in file %s\n", filename);
+>       return(0);
+>     }
+>   if (gzread(gzf, *buffer, ih*ibpl) != ih * ibpl)
+>     {
+>       gzclose(gzf);
+>       sprintf(error, "Image file %s apparently truncated.\n", filename);
+>       return(0);
+>     }
+>   gzclose(gzf);
+>   *width = iw;
+>   *height = ih;
+>   return(1);
+> }
+> 
+> int
+> ReadHeader (FILE *f, char *tc, int *w, int *h, int *m)
+1078c1018
+< ReadGZHeader (gzFile f, char *tc, unsigned int *w, unsigned int *h, int *m)
+---
+> ReadGZHeader (gzFile f, char *tc, int *w, int *h, int *m)
+1167a1108,1110
+>   char fullFilename[PATH_MAX];
+>   char *dotPos;
+>   char *slashPos;
+1170c1113
+<   if (len < 5)
+---
+>   if (len < 1)
+1176c1119,1127
+<   if (strcasecmp(&filename[len-4], ".pbm") == 0)
+---
+>   dotPos = strrchr(filename, '.');
+>   slashPos = strrchr(filename, '/');
+>   strcpy(fullFilename, filename);
+>   if (dotPos == NULL ||
+>       slashPos != NULL && dotPos < slashPos)
+>     strcat(fullFilename, ".pbm");
+>   len = strlen(fullFilename);
+> 
+>   if (strcasecmp(&fullFilename[len-4], ".pbm") == 0)
+1179c1130
+<       f = fopen(filename, "wb");
+---
+>       f = fopen(fullFilename, "wb");
+1183c1134
+< 		  filename);
+---
+> 		  fullFilename);
+1190c1141
+< 	  sprintf(error, "Could not write to file %s\n", filename);
+---
+> 	  sprintf(error, "Could not write to file %s\n", fullFilename);
+1195c1146
+<   else if (len > 7 && strcasecmp(&filename[len-7], ".pbm.gz") == 0)
+---
+>   else if (len > 7 && strcasecmp(&fullFilename[len-7], ".pbm.gz") == 0)
+1198c1149
+<       gzf = gzopen(filename, "wb");
+---
+>       gzf = gzopen(fullFilename, "wb");
+1204c1155
+< 	  sprintf(error, "Could not write to file %s\n", filename);
+---
+> 	  sprintf(error, "Could not write to file %s\n", fullFilename);
+1211c1162
+<       sprintf(error, "Unrecognized file extension for bitmap file %s\n", filename);
+---
+>       sprintf(error, "Unrecognized file extension for bitmap file %s\n", fullFilename);

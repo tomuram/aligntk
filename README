@@ -1,0 +1,31 @@
+README -- AlignTK Version 1.0.2
+-------------------------------
+
+AlignTK is a toolkit designed for batch-oriented alignment of a large
+number of 2-D images in either 2 or 3-dimensions.  Although it has
+been applied most extensively to electron-microscopy (EM) images of
+neural tissue, the package can be used with arbitrary grayscale
+images.  Multiple image formats are supported.
+
+DOWNLOADS AND DOCUMENTATION:
+
+  The most recent release and full documentation for AlignTK is
+  available at http://mmbios.org/index.php/software/aligntk .
+
+QUICK INSTALLATION:
+
+  Package prerequisites:  FFTW, FLTK, libtiff, libjpeg, zlib
+
+  ./configure
+  make
+  make check  [this is optional]
+  sudo make install
+
+QUESTIONS:
+
+   Please e-mail any questions you may have about AlignTK to aligntk@psc.edu.
+
+MAILING LIST:
+
+   If you would like to be added to the aligntk-users mailing list for
+   announcements about new releases, please send mail to aligntk@psc.edu.

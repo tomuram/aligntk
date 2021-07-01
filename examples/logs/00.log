@@ -1,0 +1,29 @@
+1380815889.122826: MASTER checking output directories
+1380815889.122888: MASTER setting context
+1380815889.122894: WorkerContext called
+1380815889.122899: MASTER set context
+1380815889.122910: nPairs = 1
+1380815889.122922: Delegating pair 0
+1380815889.122927: Worker received task z00 -> z01
+1380815889.122941: WORKER TASK opening files for images/z00 to 0.000000
+1380815889.122946: 
+Registering image images/z00 against reference images/z01
+1380815889.123798: Image images/z00 read in.
+1380815889.124563: Image images/z01 read in.
+1380815889.124612: Using rFactor=2 radius=2.560000 blk_w=512 ccFilterMin=0 ccFilterMax=512
+1380815890.973927: candidate 0:  rot = 1.757812 or 181.757812 scale = 1.002251
+ val = 0.176731 radius = 2.560000
+1380815890.973962: candidate 1:  rot = 151.523438 or 331.523438 scale = 0.875755
+ val = 0.018809 radius = 2.560000
+1380815890.973969: candidate 2:  rot = 173.671875 or 353.671875 scale = 1.081881
+ val = 0.018118 radius = 2.560000
+1380815890.973974: candidate 3:  rot = 102.656250 or 282.656250 scale = 0.920168
+ val = 0.018083 radius = 2.560000
+1380815890.974085: Considering RS candidate 0: rotation = -1.757812 scale = 1.002251 smaller = 0 larger = 1
+1380815891.602814: Added final candidate 0: -1.757812 1.002251 -12.706360 12.703217 0.685467 2.560000
+1380815891.877309: Considering RS candidate 1: rotation = 151.523444 scale = 1.141871 smaller = 1 larger = 0
+1380815892.758789: Considering RS candidate 2: rotation = -173.671876 scale = 1.081882 smaller = 0 larger = 1
+1380815893.645887: Considering RS candidate 3: rotation = 102.656247 scale = 1.086758 smaller = 1 larger = 0
+1380815894.535032: nFinalCandidates = 1
+1380815894.535073:   final candidate 0:  rot = -1.757812 scale = 1.002251
+ tx = -12.706360 ty = 12.703217 quality = 0.685467 radius = 2.560000
