@@ -1030,7 +1030,6 @@ main (int argc, char **argv)
     int len =  readlink("/proc/self/exe", buf, bufsize);
     char altFontFileName[1024];
     sprintf(altFontFileName,"%s/font.pgm",dirname(buf));
-    printf("altfontfilename = %s\n", altFontFileName);
 	  if (strcmp(fontFileName, EXPAND_AND_QUOTE(FONT_FILE)) != 0 ||
         (
 	      !ReadImage("font.pgm", &font, &fontWidth, &fontHeight,
