@@ -44,6 +44,7 @@
 #include <sched.h>
 #include <limits.h>
 #include <sys/resource.h>
+#include <libgen.h>
 
 #include "imio.h"
 #include "dt.h"
@@ -730,8 +731,6 @@ main (int argc, char **argv)
   setrlimit(RLIMIT_CORE, &rlim);
 #endif
 
-  sprintf(fn, "logs/%.2d.log", p);
-  logFile = fopen(fn, "w");
   gethostname(hostName, 255);
   Log("Process %d is running on %s\n", p, hostName);
   memset(dirHash, 0, DIR_HASH_SIZE * sizeof(char*));
@@ -754,8 +753,8 @@ main (int argc, char **argv)
       constraintName[0] = '\0';
       schedule[0] = '\0';
 
-      for (i = 0; i < argc; ++i)
-	Log("ARGV[%d] = %s\n", i, argv[i]);
+ //      for (i = 0; i < argc; ++i)
+	// Log("ARGV[%d] = %s\n", i, argv[i]);
       for (i = 1; i < argc; ++i)
 	if (strcmp(argv[i], "-images") == 0)
 	  {
@@ -766,6 +765,16 @@ main (int argc, char **argv)
 	      }
 	    strcpy(imagesName, argv[i]);
 	  }
+  else if (strcmp(argv[i], "-logs") == 0)
+    {
+      if (++i == argc)
+        {
+          error = 1;
+          break;
+        }
+      sprintf(fn, "%s/%.2d.log", argv[i], p);
+      logFile = fopen(fn, "w");
+    }
 	else if (strcmp(argv[i], "-image_list") == 0)
 	  {
 	    if (++i == argc)
@@ -1013,11 +1022,22 @@ main (int argc, char **argv)
       if (!ReadImage(fontFileName, &font, &fontWidth, &fontHeight, -1, -1, -1, -1, msg))
 	{
 	  // if we can't find the default font file, try looking in the
-          //   current directory for font.pgm; this is a hack
-	  //   to allow align to run before being formally installed
+    //   current directory and in the executable dir for font.pgm; 
+    //   this is a hack to allow align to run before being formally 
+    //   installed
+    char buf[1024];
+    int bufsize=1024;
+    int len =  readlink("/proc/self/exe", buf, bufsize);
+    char altFontFileName[1024];
+    sprintf(altFontFileName,"%s/font.pgm",dirname(buf));
+    printf("altfontfilename = %s\n", altFontFileName);
 	  if (strcmp(fontFileName, EXPAND_AND_QUOTE(FONT_FILE)) != 0 ||
+        (
 	      !ReadImage("font.pgm", &font, &fontWidth, &fontHeight,
+			 -1, -1, -1, -1, msg2) &&
+	      !ReadImage(altFontFileName, &font, &fontWidth, &fontHeight,
 			 -1, -1, -1, -1, msg2))
+        )
 	    Error("Could not load font: %s\n", msg);
 	}
 
@@ -3477,7 +3497,7 @@ main (int argc, char **argv)
 
   Log("FINALIZING\n");
   MPI_Finalize();
-  fclose(logFile);
+  if(logFile) fclose(logFile);
   return(0);
 }
 
@@ -4860,6 +4880,10 @@ void Error (char *fmt, ...)
 
 void Log (char *fmt, ...)
 {
+
+  if(!logFile)
+    return;
+
   va_list args;
 
   va_start(args, fmt);
